@@ -1,0 +1,674 @@
+/* Layout shell ---------------------------------------------------------- */
+
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding-inline: var(--shell-pad);
+}
+
+/* Lid — the top strip -------------------------------------------------- */
+
+.lid {
+  border-bottom: 1px solid var(--bevel);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--case);
+  transition:
+    border-bottom-color 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
+}
+
+/* The lid takes on an edge once the page moves under it. State-driven, so
+   it never animates on its own. */
+.lid--scrolled {
+  border-bottom-color: var(--bevel-lit);
+  box-shadow: 0 8px 22px -14px rgba(0, 0, 0, 0.95);
+}
+
+.lid__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-md);
+  min-height: 56px;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--target);
+  text-decoration: none;
+}
+
+/* Intrinsic size is set on the element so the lid never reflows on load. */
+.wordmark__mark {
+  width: auto;
+  height: 28px;
+  display: block;
+}
+
+/* Two-tone, exactly as the client's banner sets it. */
+.wordmark__text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.375rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1;
+  /* The two halves concatenate to the accessible name on their own, so no
+     sr-only duplicate is needed and the mark carries alt="". */
+}
+
+.wordmark__head {
+  color: var(--cream);
+}
+
+.wordmark__tail {
+  color: var(--mark);
+}
+
+.lid__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-md);
+}
+
+.navlink {
+  font-family: var(--font-mono);
+  font-variation-settings: var(--mono-on);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--stencil);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target);
+  padding-inline: 2px;
+  transition: color 140ms var(--ease-out);
+}
+
+.navlink:hover {
+  color: var(--cream);
+}
+
+/* A null destination is never an anchor. It is disabled, and says why. */
+.navlink--off {
+  color: var(--stencil);
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* The one live link in the lid, given the weight of a control so it does not
+   read as quieter than the disabled items sitting next to it. */
+.navlink--chip {
+  color: var(--cream);
+  border: 1px solid var(--bevel);
+  border-radius: var(--radius-cta);
+  padding-inline: 0.6875rem;
+  transition:
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out);
+}
+
+.navlink--chip:hover {
+  border-color: var(--bevel-lit);
+  color: var(--cream);
+}
+
+/* Docs and Git are null today. On a narrow lid two disabled items are noise
+   around the one working link, so they are not rendered at all below 480px —
+   they return, and become real anchors, the moment their URLs are set. */
+@media (max-width: 479px) {
+  .navlink--optional {
+    display: none;
+  }
+}
+
+/* Ticker — the status strip, second row of the sticky lid ----------------
+   Mechanic is a common marquee pattern; content, palette and accessibility
+   are ours. */
+
+.ticker {
+  /* Sits on --recess, 1.08:1 against --case — the same near-invisible fill
+     separation the reference uses, so the border does the actual work. */
+  background: var(--recess);
+  border-top: 1px solid var(--bevel);
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  padding: 7px 0;
+  font-family: var(--font-mono);
+  font-variation-settings: var(--mono-on);
+  font-size: var(--text-label);
+  line-height: 1.35;
+}
+
+.ticker__track {
+  display: inline-flex;
+  align-items: center;
+  gap: 28px;
+  /* Overwritten at runtime from the measured width to hold 46.5 px/s. The
+     fallback only applies if that measurement never runs. */
+  animation: ticker-marquee var(--ticker-duration, 40s) linear infinite;
+}
+
+.ticker:hover .ticker__track {
+  animation-play-state: paused;
+}
+
+.ticker__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* No separator glyph between label and value, and none between items —
+   the 6px and 28px gaps do it, exactly as the reference does. */
+.ticker__label {
+  color: var(--cream);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Not-issued is the resting case, so it takes the quieter colour. 6.91:1 on
+   --recess. The reference's equivalent measures 4.27:1 and fails AA. */
+.ticker__value {
+  color: var(--stencil);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Issued items promote to --cream, matching the seat board's own rule.
+   --mark is deliberately not used here: it stays reserved for the CTA, the
+   contract address and the wordmark. */
+.ticker__item--on .ticker__value {
+  color: var(--cream);
+}
+
+@keyframes ticker-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* The reference has no reduced-motion handling. This is our addition: the
+   strip stops dead and reads as a static status row. */
+@media (prefers-reduced-motion: reduce) {
+  .ticker__track {
+    animation: none;
+  }
+}
+
+/* Hero ------------------------------------------------------------------ */
+
+.hero {
+  /* Tightened so the contract row clears the fold on a 1366x768 laptop. */
+  padding-block: var(--gap-lg) var(--gap-md);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-variation-settings: var(--mono-on);
+  font-size: var(--text-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--stencil);
+  margin-bottom: var(--gap-md);
+}
+
+.headline {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-display);
+  line-height: 0.94;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  color: var(--cream);
+  /* Two lines on desktop, three at 360px. Widening the measure is what buys
+     the vertical space back without shrinking the type further. */
+  max-width: 30ch;
+  text-wrap: balance;
+}
+
+.supporting {
+  margin-top: var(--gap-sm);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--stencil);
+  max-width: 60ch;
+}
+
+.hero__actions {
+  margin-top: var(--gap-md);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-md);
+}
+
+/* CTA — one of only two places --mark is allowed to appear. */
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--target);
+  padding: 0 1.375rem;
+  background: var(--mark);
+  color: var(--case);
+  border-radius: var(--radius-cta);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 140ms var(--ease-out),
+    filter 140ms var(--ease-out),
+    box-shadow 200ms var(--ease-out);
+}
+
+/* Contained glow, on hover and keyboard focus only — never an idle pulse.
+   This is the accent behaving like a lit control, not like decoration. */
+.cta:hover,
+.cta:focus-visible {
+  filter: brightness(1.08);
+  box-shadow:
+    0 0 0 1px rgba(239, 192, 78, 0.45),
+    0 8px 28px -8px rgba(239, 192, 78, 0.5);
+}
+
+.cta:active {
+  transform: translateY(1px);
+}
+
+/* Contract address row ---------------------------------------------------
+   A primary hero element, given matching prominence in botkit's own
+   tokens. The contract
+   address is rendered here and in no other component. */
+
+.ca {
+  margin-top: var(--gap-md);
+  /* Two-row grid. Desktop: box and socials share row 1, reason sits under.
+     Narrow: box takes the full width and the reason shares row 2 with the
+     socials, which saves an entire 44px row above the fold. */
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    'box socials'
+    'reason reason';
+  justify-content: start;
+  align-items: center;
+  gap: var(--gap-sm);
+}
+
+/* The bordered container. Sits on --recess at 1.08:1 against the hero
+   ground, so — as everywhere else on this page — the border carries the
+   separation, not the fill. */
+.ca__box {
+  grid-area: box;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  min-width: 0;
+  background: var(--recess);
+  /* --bevel-lit, not --bevel: 3.94:1 against the hero ground where the old
+     border measured 2.06:1. The fill separation is only 1.08:1, so the
+     border is the entire signal and it has to carry. */
+  border: 1px solid var(--bevel-lit);
+  border-radius: 6px;
+  padding: 5px 5px 5px 12px;
+  min-height: 52px;
+  min-width: 0;
+}
+
+.ca__box--pending {
+  border-style: dashed;
+}
+
+.ca__label {
+  font-family: var(--font-mono);
+  font-variation-settings: var(--mono-on);
+  font-size: var(--text-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--stencil);
+  flex: none;
+}
+
+/* Live: --mark, one of its four permitted uses. 11.81:1 on --recess. */
+.ca__value {
+  font-family: var(--font-mono);
+  font-variation-settings: var(--mono-on);
+  font-size: var(--text-address);
+  letter-spacing: 0.01em;
+  color: var(--mark);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* Pre-launch: the placeholder is deliberately quieter than a real address
+   would be, so the two states are never confusable. 6.91:1 on --recess. */
+.ca__value--pending {
+  color: var(--stencil);
+}
+
+/* A real button, attached at the right edge of the box. */
+.ca__copy {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--target);
+  min-width: 76px;
+  padding-inline: 1rem;
+  border-radius: var(--radius-cta);
+  background: var(--cream);
+  color: var(--case);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    filter 140ms var(--ease-out),
+    transform 140ms var(--ease-out);
+}
+
+.ca__copy:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.ca__copy:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Visibly inert while the value is the placeholder — not a live-looking
+   button that silently does nothing. The reason sits below the row. */
+.ca__copy:disabled {
+  background: transparent;
+  border: 1px dashed var(--bevel);
+  color: var(--stencil);
+  cursor: not-allowed;
+}
+
+.ca__socials {
+  grid-area: socials;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
+}
+
+.ca__social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target);
+  height: var(--target);
+  border: 1px solid var(--bevel);
+  border-radius: var(--radius-cta);
+  color: var(--cream);
+  text-decoration: none;
+  transition:
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out);
+}
+
+.ca__social:hover {
+  border-color: var(--bevel-lit);
+}
+
+.ca__reason {
+  grid-area: reason;
+  font-family: var(--font-mono);
+  font-variation-settings: var(--mono-on);
+  font-size: var(--text-label);
+  letter-spacing: 0.04em;
+  color: var(--stencil);
+}
+
+@media (max-width: 620px) {
+  .ca {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'box box'
+      'reason socials';
+  }
+
+  .ca__reason {
+    align-self: center;
+  }
+}
+
+/* Launch note ------------------------------------------------------------
+   A statement of intent about where the token will launch. Never rendered in
+   --mark: the accent stays reserved for the CTA and the address itself. */
+
+.launch-note {
+  margin-top: var(--gap-md);
+  max-width: 56ch;
+  font-size: var(--text-ui);
+  line-height: 1.55;
+  color: var(--stencil);
+}
+
+.launch-note__link {
+  color: var(--stencil);
+  text-underline-offset: 3px;
+}
+
+.launch-note__link:hover {
+  color: var(--cream);
+}
+
+/* Board ----------------------------------------------------------------- */
+
+.board {
+  padding-block: var(--gap-lg) var(--gap-xl);
+  border-top: 1px solid var(--bevel);
+}
+
+.board__label {
+  font-family: var(--font-mono);
+  font-variation-settings: var(--mono-on);
+  font-size: var(--text-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--stencil);
+}
+
+.board__lede {
+  margin-top: var(--gap-sm);
+  color: var(--stencil);
+  max-width: 62ch;
+}
+
+.tray {
+  margin-top: var(--gap-lg);
+  display: grid;
+  gap: var(--gap-md);
+  grid-template-columns: 1fr;
+}
+
+/* Seat — the signature element.
+   Depth comes from the bevel and the inner shadow, because --recess against
+   --case is only 1.08:1. State is always in text as well. */
+
+.seat {
+  position: relative;
+  border-radius: var(--radius-seat);
+  padding: var(--gap-md);
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--gap-sm);
+}
+
+.seat--issued {
+  background: var(--recess);
+  border-top: 1px solid var(--bevel);
+  border-left: 1px solid var(--bevel);
+  box-shadow: var(--seat-shadow);
+}
+
+/* An empty seat is the same cut, with nothing in it. */
+.seat--planned {
+  background: transparent;
+  border: 1px dashed var(--bevel);
+}
+
+/* Hover — the edge of the cut catches light and the recess deepens.
+   Deliberately not a lift: these are routed into the board, so raising them
+   on hover would contradict the one idea the page is built on. Pointer
+   devices only, so it never sticks on touch. */
+@media (hover: hover) {
+  .seat {
+    transition:
+      border-color 200ms var(--ease-out),
+      box-shadow 200ms var(--ease-out);
+  }
+
+  .seat--issued:hover {
+    border-top-color: var(--bevel-lit);
+    border-left-color: var(--bevel-lit);
+    box-shadow: inset -1px -3px 8px rgba(0, 0, 0, 0.9);
+  }
+
+  .seat--planned:hover {
+    border-color: var(--bevel-lit);
+  }
+}
+
+.seat__id {
+  font-family: var(--font-mono);
+  font-variation-settings: var(--mono-on);
+  font-size: var(--text-seat);
+  letter-spacing: 0.01em;
+  color: var(--cream);
+  line-height: 1.2;
+}
+
+.seat--planned .seat__id {
+  color: var(--stencil);
+}
+
+.seat__summary {
+  font-size: var(--text-ui);
+  line-height: 1.5;
+  color: var(--stencil);
+}
+
+/* Seat state is zinc or stencil — never --mark. */
+.seat__state {
+  font-family: var(--font-mono);
+  font-variation-settings: var(--mono-on);
+  font-size: var(--text-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.seat--issued .seat__state {
+  color: var(--cream);
+}
+
+.seat--planned .seat__state {
+  color: var(--stencil);
+}
+
+/* Footer ---------------------------------------------------------------- */
+
+.footer {
+  border-top: 1px solid var(--bevel);
+  padding-block: var(--gap-lg) var(--gap-xl);
+}
+
+.footer__line {
+  color: var(--stencil);
+  max-width: 48ch;
+}
+
+.footer__meta {
+  margin-top: var(--gap-md);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-md);
+}
+
+.footer__domain {
+  font-family: var(--font-mono);
+  font-variation-settings: var(--mono-on);
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  color: var(--stencil);
+}
+
+/* Motion — one moment, on load, then rest. -------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Hidden only once JS has armed the tray, so a failed script leaves the
+     seats visible rather than invisible. */
+  .tray--armed .seat {
+    opacity: 0;
+  }
+
+  /* Seats settle into the board when the tray is reached. Once, then rest.
+     opacity is declared here as well as in the keyframes, so the resting
+     state does not depend on the animation having run — if animations are
+     disabled or interrupted, the seats are simply visible. */
+  .tray--in .seat {
+    opacity: 1;
+    animation: settle 460ms var(--ease-out) both;
+  }
+
+  @keyframes settle {
+    from {
+      opacity: 0;
+      transform: translateY(-7px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* Breakpoints ------------------------------------------------------------ */
+
+@media (min-width: 640px) {
+  .tray {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 960px) {
+  .lid__inner {
+    min-height: 64px;
+  }
+
+  .lid__nav {
+    gap: var(--gap-lg);
+  }
+
+  .hero {
+    /* Was 4.5rem top. Lowered so the contract row clears the fold on a
+       1366x768 laptop once browser chrome is subtracted. */
+    padding-block: 2.5rem 2rem;
+  }
+
+  .tray {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

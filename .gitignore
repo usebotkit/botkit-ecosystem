@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build output and packaged artifacts
+dist/
+build/
+.vite/
+*.tsbuildinfo
+*.zip
+*.tgz
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Editor directories
+.vscode/
+.idea/
+*.swp
+*.swo
+*.local
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Internal working documents — kept on disk, never published
+BRIEF-*.md
+*-BRIEF.md
+DESIGN-DIRECTION.md
+CONFIG-MAP.md
+NOTES-*.md
+_research/
+REF-*.md
+
+# Client master art — supplied source assets, not needed to build
+brand/
+reference/
